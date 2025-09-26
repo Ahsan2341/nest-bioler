@@ -7,13 +7,14 @@ export abstract class GenericService {
     filter: any = {},
     limit?: number,
     page?: number,
+    populate?: string[],
   ): Promise<{
     data;
     totalItems: number;
     currentPage?: number;
     limit?: number;
   }> {
-    return this.repository.findAll(filter, limit, page);
+    return this.repository.findAll(filter, limit, page, populate);
   }
   async findOne(filter: any = {}) {
     return this.repository.findOne(filter);

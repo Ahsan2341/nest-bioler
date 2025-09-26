@@ -19,29 +19,43 @@ export class GenericRepository<T extends Document> {
     filter: any = {},
     limit?: number,
     page?: number,
-  ): Promise<{ data: T[]; totalItems: number; currentPage?: number; limit?: number }> {
-    const isPaginated = limit !== undefined && page !== undefined && limit > 0 && page > 0;
+    populate?: string[],
+  ): Promise<{
+    data: T[];
+    totalItems: number;
+    currentPage?: number;
+    limit?: number;
+  }> {
+    const isPaginated =
+      limit !== undefined && page !== undefined && limit > 0 && page > 0;
+    // Build the query
+    let query = this.model.find(filter);
 
+    // Apply population if provided
+    if (populate && Array.isArray(populate) && populate.length > 0) {
+      for (const field of populate) {
+        query = query.populate(field.trim());
+      }
+    }
+    // Apply pagination if provided
     if (isPaginated) {
       const skip = (page - 1) * limit;
-      const [data, totalItems] = await Promise.all([
-        this.model.find(filter).limit(limit).skip(skip).exec(),
-        this.model.countDocuments(filter).exec(),
-      ]);
-      return {
-        data,
-        totalItems,
-        currentPage: page,
-        limit,
-      };
-    } else {
-      const data = await this.model.find(filter).exec();
-      const totalItems = data.length;
-      return { data, totalItems };
+      query = query.limit(limit).skip(skip);
     }
+
+    // Execute the query
+    const [data, totalItems] = await Promise.all([
+      query.exec(),
+      this.model.countDocuments(filter).exec(),
+    ]);
+    return {
+      data,
+      totalItems,
+      ...(isPaginated ? { currentPage: page, limit } : {}),
+    };
   }
 
-  async findOne(filter:any={}){
+  async findOne(filter: any = {}) {
     return this.model.findOne(filter);
   }
 }
