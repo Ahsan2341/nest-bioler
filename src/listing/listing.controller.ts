@@ -28,13 +28,26 @@ export class ListingController {
   @Get()
   findAll(
     @Request() request,
-    @Query() Params,
+    @Query() params,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
   ) {
     const user = request.user;
-    const filters={...Params, user:user._id}
-    console.log(filters)
+    const filters = {
+      ...Object.fromEntries(
+        Object.entries(params).filter(
+          ([key]) => !['page', 'limit', "minPrice", "maxPrice", "myListing", "location"].includes(key),
+        ),
+      ),
+      ...(params.minPrice && !params.maxPrice && { monthlyRent: { $gte: Number(params.minPrice) } }),
+      ...(params.maxPrice && !params.minPrice && { monthlyRent: { ...(params.minPrice && { $gte: Number(params.minPrice) }), $lte: Number(params.maxPrice) } }),
+      ...(params.maxPrice && params.minPrice && { monthlyRent: { ...(params.minPrice && { $gte: Number(params.minPrice) }), $lte: Number(params.maxPrice) } }),
+      ...(params.myListing && {user:user._id}),
+      ...(params.amenities && { amenities: { $in: params.amenities.split(",").map(item => item.trim()) }}),
+      ...(params.availableFrom && { availableFrom: { $lte: new Date() } }),
+      ...(params.location && { address: { $regex: params.location, $options: 'i' } })
+    };
+    console.log(filters);
     const pageNum = page ? parseInt(page, 10) : undefined;
     const limitNum = limit ? parseInt(limit, 10) : undefined;
     return this.listingService.findAll(filters, pageNum, limitNum);

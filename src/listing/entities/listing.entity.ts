@@ -32,7 +32,7 @@ export class Listing {
   photos: string[];
 
   @Prop({ required: true })
-  features: string[];
+  amenities: string[];
 
   @Prop({ required: true, type: Date })
   availableFrom: Date;
