@@ -19,4 +19,20 @@ export abstract class GenericService {
   async findOne(filter: any = {}) {
     return this.repository.findOne(filter);
   }
+  async findByIdAndUpdate(
+    id: string,
+    updateEntityData,
+    resourceName = 'Entity Updated successfully.',
+  ) {
+    console.log(updateEntityData);
+    const result = await this.repository.findByIdAndUpdate(
+      id,
+      updateEntityData,
+      {
+        new: true,
+      },
+    );
+    console.log(result);
+    return  result;
+  }
 }

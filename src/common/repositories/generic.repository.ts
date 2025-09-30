@@ -1,4 +1,4 @@
-import { Document, Model } from 'mongoose';
+import { Document, Model, UpdateQuery } from 'mongoose';
 import { NotFoundException } from '@nestjs/common';
 
 export class GenericRepository<T extends Document> {
@@ -54,7 +54,14 @@ export class GenericRepository<T extends Document> {
       ...(isPaginated ? { currentPage: page, limit } : {}),
     };
   }
-
+  async findByIdAndUpdate(
+    id: string,
+    updateEntityData: UpdateQuery<unknown>,
+  ): Promise<T | null> {
+    return this.model.findByIdAndUpdate(id, updateEntityData, {
+      new: true,
+    });
+  }
   async findOne(filter: any = {}) {
     return this.model.findOne(filter);
   }

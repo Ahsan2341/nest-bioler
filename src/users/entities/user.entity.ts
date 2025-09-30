@@ -15,6 +15,9 @@ export class User {
 
   @Prop({})
   profilePicture: string;
+
+  @Prop()
+  stripeCustomerId: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

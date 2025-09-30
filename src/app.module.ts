@@ -6,6 +6,8 @@ import { UsersModule } from './users/users.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ListingModule } from './listing/listing.module';
+import { WalletModule } from './wallet/wallet.module';
+import { StripeModule } from './stripe/stripe.module';
 
 @Module({
   imports: [
@@ -26,6 +28,8 @@ import { ListingModule } from './listing/listing.module';
     AuthModule,
     UsersModule,
     ListingModule,
+    WalletModule,
+    StripeModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -15,19 +15,41 @@ import { AuthService } from './auth.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UsersService } from 'src/users/users.service';
 import { LoginDto } from './dto/login-dto';
+import { StripeService } from 'src/stripe/stripe.service';
+import { WalletService } from 'src/wallet/wallet.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly stripeService: StripeService,
+    private readonly walletService: WalletService,
+  ) {}
   @Inject(UsersService)
   private readonly userService: UsersService;
   @Post('sign-up')
   async SignUp(@Body() createUserDto: CreateUserDto) {
-    const existingUser=await this.userService.findOne({email:createUserDto.email});
-    if(existingUser){
-      throw new BadRequestException("User with this email already exists");
+    const existingUser = await this.userService.findOne({
+      email: createUserDto.email,
+    });
+    if (existingUser) {
+      throw new BadRequestException('User with this email already exists');
     }
-    return this.userService.create(createUserDto);
+    const user = await this.userService.create(createUserDto);
+    if (!user) {
+      throw new BadRequestException('User not created');
+    }
+    // create stripe customer
+    const customer = await this.stripeService.createCustomer(
+      createUserDto.email,
+    );
+    // update created user stripeCustomerId
+    await this.userService.findByIdAndUpdate(user.data._id, {
+      stripeCustomerId: customer.id,
+    });
+    // create user wallet
+    await this.walletService.create({ user: user.data._id });
+    return user;
   }
 
   @Post('login')
