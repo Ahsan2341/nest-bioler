@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { WalletService } from './wallet.service';
 import { WalletController } from './wallet.controller';
 import { MongooseModule } from '@nestjs/mongoose';
@@ -9,7 +9,7 @@ import { UsersModule } from 'src/users/users.module';
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Wallet.name, schema: WalletSchema }]),
-    UsersModule,
+    forwardRef(()=>UsersModule),
   ],
   controllers: [WalletController],
   providers: [WalletService, JwtAuthService],

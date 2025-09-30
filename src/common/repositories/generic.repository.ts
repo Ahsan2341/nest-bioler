@@ -1,4 +1,11 @@
-import { Document, Model, UpdateQuery } from 'mongoose';
+import {
+  Document,
+  FilterQuery,
+  Model,
+  QueryOptions,
+  UpdateQuery,
+  UpdateWithAggregationPipeline,
+} from 'mongoose';
 import { NotFoundException } from '@nestjs/common';
 
 export class GenericRepository<T extends Document> {
@@ -64,5 +71,13 @@ export class GenericRepository<T extends Document> {
   }
   async findOne(filter: any = {}) {
     return this.model.findOne(filter);
+  }
+
+  async updateOne(
+    filter: FilterQuery<T>,
+    updated: UpdateWithAggregationPipeline | UpdateQuery<T>,
+    options?: QueryOptions,
+  ): Promise<unknown> {
+    return this.model.updateOne(filter, updated);
   }
 }

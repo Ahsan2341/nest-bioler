@@ -21,8 +21,8 @@ export class WalletService {
     return `This action returns a #${id} wallet`;
   }
 
-  update(id: number, updateWalletDto: UpdateWalletDto) {
-    return `This action updates a #${id} wallet`;
+  update(filter, updateWalletDto) {
+    return this.walletModel.updateOne(filter, updateWalletDto);
   }
 
   remove(id: number) {

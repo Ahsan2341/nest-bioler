@@ -33,6 +33,11 @@ export abstract class GenericService {
       },
     );
     console.log(result);
-    return  result;
+    return result;
+  }
+
+  async updateOne(filter, updated, options): Promise<unknown> {
+    const result = await this.repository.updateOne(filter, updated, options);
+    return result;
   }
 }

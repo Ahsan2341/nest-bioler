@@ -1,4 +1,6 @@
-import { Module } from '@nestjs/common';
+import {
+  Module,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -20,8 +22,7 @@ import { StripeModule } from './stripe/stripe.module';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         uri:
-          configService.get<string>('MONGODB_URI') ||
-          process.env.MONGODB_URI,
+          configService.get<string>('MONGODB_URI') || process.env.MONGODB_URI,
       }),
       inject: [ConfigService],
     }),
