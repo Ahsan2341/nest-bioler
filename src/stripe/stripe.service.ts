@@ -3,10 +3,14 @@ import { CreateStripeDto } from './dto/create-stripe.dto';
 import { UpdateStripeDto } from './dto/update-stripe.dto';
 import Stripe from 'stripe';
 import { WalletService } from 'src/wallet/wallet.service';
+import { UsersService } from 'src/users/users.service';
 @Injectable()
 export class StripeService {
   public stripe;
-  constructor(private readonly walletService:WalletService) {
+  constructor(
+    private readonly walletService: WalletService,
+    private readonly userService: UsersService,
+  ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
   }
   create(createStripeDto: CreateStripeDto) {
@@ -38,13 +42,11 @@ export class StripeService {
     amountInCents: number,
     stripeCustomerId: string,
   ) {
-    // Input validation
     if (
       !stripeCustomerId ||
       typeof stripeCustomerId !== 'string' ||
       !stripeCustomerId.startsWith('cus_')
     ) {
-      console.log(stripeCustomerId);
       throw new BadRequestException('Invalid or missing Stripe customer ID');
     }
     if (!Number.isInteger(amountInCents) || amountInCents <= 0) {
@@ -53,12 +55,10 @@ export class StripeService {
       );
     }
     if (!userId || typeof userId !== 'string') {
-      console.log(userId);
       throw new BadRequestException('Invalid or missing user ID');
     }
 
     try {
-      // Verify customer exists (optional, for debugging)
       await this.stripe.customers.retrieve(stripeCustomerId).catch((err) => {
         throw new BadRequestException(
           `Invalid Stripe customer: ${err.message}`,
@@ -75,7 +75,7 @@ export class StripeService {
               product_data: {
                 name: 'Wallet Top-Up',
               },
-              unit_amount: Math.round(amountInCents), // Ensure integer
+              unit_amount: Math.round(amountInCents),
             },
             quantity: 1,
           },
@@ -121,9 +121,53 @@ export class StripeService {
       }
 
       // Update wallet balance
-      await this.walletService.update({user:userId}, { $inc: { availableBalance: amountInDollars } },);
+      await this.walletService.update(
+        { user: userId },
+        { $inc: { availableBalance: amountInDollars } },
+      );
       console.log(`Updated balance for user ${userId} by $${amountInDollars}`);
     }
     return { received: true };
+  }
+  async startOnboarding(userId: string) {
+    const user = await this.userService.findOne({_id:userId});
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+    if (user.stripeConnectedAccountId) {
+      throw new BadRequestException('User already onboarded');
+    }
+
+    try {
+      console.log('Creating account for user:', userId); // Debug log
+      const account = await this.stripe.accounts.create({
+        type: 'standard',
+        country: 'US', // Adjust dynamically if needed (e.g., based on user location)
+        email: user.email,
+        capabilities: {
+          card_payments: { requested: true },
+          transfers: { requested: true },
+        },
+        business_type: 'individual', // Default; adjust if business accounts needed
+        metadata: { userId },
+      });
+
+      console.log('Account created:', account.id); // Debug log
+      await this.userService.findByIdAndUpdate(userId, { stripeConnectedAccountId: account.id });
+
+      const accountLink = await this.stripe.accountLinks.create({
+        account: account.id,
+        refresh_url: 'http://localhost:3000/stripe/onboard-refresh',
+        return_url: 'http://localhost:3000/stripe/onboard-return',
+        type: 'account_onboarding',
+        collect: 'eventually_due', // Collect required info now
+      });
+
+      console.log('Account link created:', accountLink.url); // Debug log
+      return { url: accountLink.url };
+    } catch (error) {
+      console.error('Onboarding error:', error.message, error.stack);
+      throw new BadRequestException(`Onboarding failed: ${error.message}`);
+    }
   }
 }
