@@ -19,6 +19,9 @@ export abstract class GenericService {
   async findOne(filter: any = {}) {
     return this.repository.findOne(filter);
   }
+  async findById(id:string) {
+    return this.repository.findById(id);
+  }
   async findByIdAndUpdate(
     id: string,
     updateEntityData,
@@ -32,12 +35,18 @@ export abstract class GenericService {
         new: true,
       },
     );
-    console.log(result);
     return result;
   }
 
   async updateOne(filter, updated, options): Promise<unknown> {
     const result = await this.repository.updateOne(filter, updated, options);
     return result;
+  }
+  async findOneAndUpdate(filter, updateEntityData) {
+    return this.repository.findOneAndUpdate(filter, updateEntityData);
+  }
+
+  async updateMany(filter, updateEntityData) {
+    return this.repository.updateMany(filter, updateEntityData);
   }
 }

@@ -16,9 +16,20 @@ export class User {
   @Prop({})
   profilePicture: string;
 
+  @Prop({ default: '' })
+  googleSignInId: string;
+
+  @Prop({ default: false })
+  googleSignInEnabled: boolean;
+  @Prop()
+  passwordResetToken: number;
+
+  @Prop()
+  passwordResetTokenExpiresAt: Date;
+
   @Prop()
   stripeCustomerId: string;
-  
+
   @Prop({ type: String, default: null })
   stripeConnectedAccountId: string;
 }

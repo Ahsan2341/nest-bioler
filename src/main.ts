@@ -10,6 +10,13 @@ async function bootstrap() {
   );
   app.use(bodyParser.json({ limit: '50mb' }));
   app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
+
+  app.enableCors({
+    origin: 'http://localhost:5173', // frontend origin
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    allowedHeaders: 'Content-Type, Authorization, X-Requested-With, Accept',
+    credentials: true, // if you're using cookies/JWT in cookies
+  });
   // Enable global validation pipe
   app.useGlobalPipes(
     new ValidationPipe({

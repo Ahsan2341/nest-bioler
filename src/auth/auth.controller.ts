@@ -17,6 +17,7 @@ import { UsersService } from 'src/users/users.service';
 import { LoginDto } from './dto/login-dto';
 import { StripeService } from 'src/stripe/stripe.service';
 import { WalletService } from 'src/wallet/wallet.service';
+import { ForgotPasswordDto } from './dto/forgot-password';
 
 @Controller('auth')
 export class AuthController {
@@ -39,13 +40,10 @@ export class AuthController {
     if (!user) {
       throw new BadRequestException('User not created');
     }
-    // create stripe customer
-    const customer = await this.stripeService.createCustomer(
-      createUserDto.email,
-    );
+    const customerId = await this.stripeService.getOrCreateCustomer(user.data._id);
     // update created user stripeCustomerId
     await this.userService.findByIdAndUpdate(user.data._id, {
-      stripeCustomerId: customer.id,
+      stripeCustomerId: customerId,
     });
     // create user wallet
     await this.walletService.create({ user: user.data._id });
@@ -68,5 +66,15 @@ export class AuthController {
     }
     const token = await this.authService.createToken(user);
     return { message: 'Login Successfull', token };
+  }
+
+  @Post("forgot-password")
+  async forgotPassword(@Body() body:ForgotPasswordDto){
+    // find user
+    const user = await this.userService.findOne({email:body.email});
+    if(!user){
+      throw new BadRequestException("User with this email does not exist");
+    }
+    return user
   }
 }

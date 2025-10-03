@@ -61,6 +61,9 @@ export class GenericRepository<T extends Document> {
       ...(isPaginated ? { currentPage: page, limit } : {}),
     };
   }
+  async findById(id:string){
+    return this.model.findById(id);
+  }
   async findByIdAndUpdate(
     id: string,
     updateEntityData: UpdateQuery<unknown>,
@@ -68,6 +71,9 @@ export class GenericRepository<T extends Document> {
     return this.model.findByIdAndUpdate(id, updateEntityData, {
       new: true,
     });
+  }
+  async findOneAndUpdate(filter, updateEntityData) {
+    return this.model.findOneAndUpdate(filter, updateEntityData);
   }
   async findOne(filter: any = {}) {
     return this.model.findOne(filter);
@@ -79,5 +85,9 @@ export class GenericRepository<T extends Document> {
     options?: QueryOptions,
   ): Promise<unknown> {
     return this.model.updateOne(filter, updated);
+  }
+
+  async updateMany(filter, updateEntityData){
+    return this.model.updateMany(filter, updateEntityData);
   }
 }
